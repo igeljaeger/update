@@ -1,0 +1,31 @@
+#!/bin/bash
+#Ubuntu updates:
+sudo apt update -y 2> /dev/null | grep packages | cut -d '.' -f 1
+sudo apt upgrade -y --allow-downgrades 2> /dev/null | grep packages | cut -d '.' -f 1 | tr -d '\n'
+#2> /dev/null | grep packages | cut -d '.' -f 1 
+sudo apt autoremove -y 
+#2> /dev/null | grep packages | cut -d '.' -f 1
+#Git pulls:
+echo "Updating extra software."
+echo "Updating yt-dlp."
+sudo apt remove yt-dlp 2> /dev/null | grep packages | cut -d '.' -f 1
+/home/igel/.local/bin/yt-dlp --update > /dev/null
+#2> /dev/null | grep packages | cut -d '.' -f 1
+echo "Updating ghostty."
+source /etc/os-release
+GHOSTTY_DEB_URL=$(
+   curl -s https://api.github.com/repos/mkasberg/ghostty-ubuntu/releases/latest | \
+   grep -oP "https://github.com/mkasberg/ghostty-ubuntu/releases/download/[^\s/]+/ghostty_[^\s/_]+_amd64_${VERSION_ID}.deb"
+)
+GHOSTTY_DEB_FILE=$(basename "$GHOSTTY_DEB_URL")
+curl -LO "$GHOSTTY_DEB_URL" 2> /dev/null | grep "ghostty" | cut -d '.' -f 1
+sudo dpkg -i "$GHOSTTY_DEB_FILE" 2> /dev/null | grep "(Reading" | cut -d '(' -f 1 | tr -d '\n'
+rm "$GHOSTTY_DEB_FILE"
+echo "Updating scrcpy."
+sudo apt remove scrcpy 2> /dev/null | grep packages | cut -d '.' -f 1
+sudo apt install ffmpeg libsdl2-2.0-0 adb wget gcc pkg-config meson ninja-build libsdl2-dev libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev libswresample-dev libusb-1.0-0 libusb-1.0-0-dev 2> /dev/null | grep packages | cut -d '.' -f 1 && cd ~/Apps/scrcpy && git pull --quiet && echo "yeet" > /dev/null || ./install_release.sh > /dev/null
+#Flatpak updates:
+echo "Updating flatpaks."
+flatpak update -y 2> /dev/null | grep "Info:" | cut -d 'I' -f 1 | tr -d '\n'
+#| tail -n +2 | sed 's/\n//' #> /dev/null
+echo "Updates complete."
