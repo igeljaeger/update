@@ -2,15 +2,12 @@
 #Ubuntu updates:
 sudo apt update -y 2> /dev/null | grep packages | cut -d '.' -f 1
 sudo apt upgrade -y --allow-downgrades 2> /dev/null | grep packages | cut -d '.' -f 1 | tr -d '\n'
-#2> /dev/null | grep packages | cut -d '.' -f 1 
 sudo apt autoremove -y 
-#2> /dev/null | grep packages | cut -d '.' -f 1
 #Git pulls:
 echo "Updating extra software."
 echo "Updating yt-dlp."
 sudo apt remove yt-dlp 2> /dev/null | grep packages | cut -d '.' -f 1
 /home/igel/.local/bin/yt-dlp --update > /dev/null
-#2> /dev/null | grep packages | cut -d '.' -f 1
 echo "Updating ghostty."
 source /etc/os-release
 GHOSTTY_DEB_URL=$(
@@ -27,5 +24,4 @@ sudo apt install ffmpeg libsdl2-2.0-0 adb wget gcc pkg-config meson ninja-build 
 #Flatpak updates:
 echo "Updating flatpaks."
 flatpak update -y 2> /dev/null | grep "Info:" | cut -d 'I' -f 1 | tr -d '\n'
-#| tail -n +2 | sed 's/\n//' #> /dev/null
 echo "Updates complete."
