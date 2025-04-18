@@ -19,7 +19,7 @@ sudo apt autoremove -y
 ###
 #Install missing apt packages:
 ###
-for pkg in steam-devices adb ffmpeg ani-cli syncplay fastfetch mpv snapd flatpak; do
+for pkg in steam-devices adb ffmpeg ani-cli syncplay fastfetch mpv snapd flatpak plasma-discover-backend-snap plasma-discover-backend-flatpak; do
     if ! dpkg -s "$pkg" >/dev/null 2>&1; then
         sudo apt install -y "$pkg" >/dev/null 2>&1
     fi
