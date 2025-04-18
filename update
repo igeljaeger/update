@@ -25,17 +25,24 @@ for pkg in steam-devices adb ffmpeg ani-cli syncplay fastfetch mpv snapd flatpak
     fi
 done
 ###
+#Install latest ani-cli version:
+###
+if [ ! -f ~/.local/bin/ani-cli ]; then
+    wget -O ~/.local/bin/ani-cli https://github.com/pystardust/ani-cli/releases/latest/download/ani-cli > /dev/null 2>&1
+    chmod a+rx ~/.local/bin/ani-cli > /dev/null 2>&1
+fi
+echo "Updating ani-cli."
+output=$(ani-cli --update)
+[[ "$output" =~ "up to date" ]] && echo "ani-cli is up to date." || echo "$output"
+###
 #Install latest yt-dlp version:
 ###
 if [ ! -f ~/.local/bin/yt-dlp ]; then
     wget -O ~/.local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp > /dev/null 2>&1
     chmod a+rx ~/.local/bin/yt-dlp > /dev/null 2>&1
 fi
-if apt list --installed 2>/dev/null | grep -q "^yt-dlp/"; then
-    sudo apt remove -y yt-dlp >/dev/null 2>&1
-fi
 echo "Updating yt-dlp."
-yt-dlp --update | sed -n '/yt-dlp is up to date/s/(.*//p' | sed 's/\.$//' || true
+yt-dlp --update | sed -n '/yt-dlp is up to date./s/(.*//p' | sed 's/\.$//' || true
 ###
 #Install missing snap packages:
 ###
