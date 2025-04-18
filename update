@@ -1,27 +1,55 @@
 #!/bin/bash
-#Ubuntu updates:
-sudo apt update -y 2> /dev/null | grep packages | cut -d '.' -f 1
-sudo apt upgrade -y --allow-downgrades 2> /dev/null | grep packages | cut -d '.' -f 1 | tr -d '\n'
+###
+#Ubuntu apt updates:
+###
+quiet-update() {
+    # Silent update check
+    sudo apt update -y >/dev/null 2>&1
+
+    # Check if updates exist
+    if [ $(apt list --upgradable 2>/dev/null | wc -l) -gt 1 ]; then
+        echo "Updates available:"
+        apt list --upgradable 2>/dev/null | grep -v '^Listing...'
+        sudo apt upgrade -y --allow-downgrades 2>&1 | grep -v '^Summary:\|^WARNING\|^$'
+    else
+        echo "System up to date"
+    fi
+}
 sudo apt autoremove -y 
-#Git pulls:
-echo "Updating extra software."
+###
+#Install missing apt packages:
+###
+for pkg in steam-devices adb ffmpeg ani-cli syncplay fastfetch mpv; do
+    if ! dpkg -s "$pkg" >/dev/null 2>&1; then
+        sudo apt install -y "$pkg" >/dev/null 2>&1
+    fi
+done
+###
+#Install latest yt-dlp version:
+###
+if [ ! -f ~/.local/bin/yt-dlp ]; then
+    wget -O ~/.local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp > /dev/null 2>&1
+    chmod a+rx ~/.local/bin/yt-dlp > /dev/null 2>&1
+fi
+if apt list --installed 2>/dev/null | grep -q "^yt-dlp/"; then
+    sudo apt remove -y yt-dlp >/dev/null 2>&1
+fi
 echo "Updating yt-dlp."
-sudo apt remove yt-dlp 2> /dev/null | grep packages | cut -d '.' -f 1
-/home/igel/.local/bin/yt-dlp --update > /dev/null
-echo "Updating ghostty."
-source /etc/os-release
-GHOSTTY_DEB_URL=$(
-   curl -s https://api.github.com/repos/mkasberg/ghostty-ubuntu/releases/latest | \
-   grep -oP "https://github.com/mkasberg/ghostty-ubuntu/releases/download/[^\s/]+/ghostty_[^\s/_]+_amd64_${VERSION_ID}.deb"
-)
-GHOSTTY_DEB_FILE=$(basename "$GHOSTTY_DEB_URL")
-curl -LO "$GHOSTTY_DEB_URL" 2> /dev/null | grep "ghostty" | cut -d '.' -f 1
-sudo dpkg -i "$GHOSTTY_DEB_FILE" 2> /dev/null | grep "(Reading" | cut -d '(' -f 1 | tr -d '\n'
-rm "$GHOSTTY_DEB_FILE"
-echo "Updating scrcpy."
-sudo apt remove scrcpy 2> /dev/null | grep packages | cut -d '.' -f 1
-sudo apt install ffmpeg libsdl2-2.0-0 adb wget gcc pkg-config meson ninja-build libsdl2-dev libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev libswresample-dev libusb-1.0-0 libusb-1.0-0-dev 2> /dev/null | grep packages | cut -d '.' -f 1 && cd ~/Apps/scrcpy && git pull --quiet && echo "yeet" > /dev/null || ./install_release.sh > /dev/null
-#Flatpak updates:
+yt-dlp --update | sed -n '/yt-dlp is up to date/s/(.*//p' | sed 's/\.$//' || true
+###
+#Install missing snap packages:
+###
+for snap in discord scrcpy; do
+    snap list "$snap" >/dev/null 2>&1 || sudo snap install "$snap" >/dev/null 2>&1
+done
+###
+#Update flatpaks and snaps:
+###
+echo "Updating snaps."
+sudo snap refresh
 echo "Updating flatpaks."
-flatpak update -y 2> /dev/null | grep "Info:" | cut -d 'I' -f 1 | tr -d '\n'
+if output=$(flatpak update -y 2>&1); then
+    filtered=$(grep -v -e '^Info:' -e '^   ' -e '^$' <<< "$output")
+    [[ "$filtered" =~ "Nothing to do" ]] && echo "All flatpaks up to date." || echo "$filtered"
+fi
 echo "Updates complete."
