@@ -52,4 +52,22 @@ if output=$(flatpak update -y 2>&1); then
     filtered=$(grep -v -e '^Info:' -e '^   ' -e '^$' <<< "$output")
     [[ "$filtered" =~ "Nothing to do" ]] && echo "All flatpaks up to date." || echo "$filtered"
 fi
+###
+#Check for major distro-upgrades:
+###
+pending_pkg=$(sudo apt-get -s dist-upgrade | grep -P '^\d+ (removed|newly installed)')
+if [[ -n "$pending_pkg" ]]; then
+    echo "Major package changes required:"
+    sudo apt-get -s dist-upgrade | grep -P '^\d+ (upgraded|newly installed|removed)'
+    read -p "Continue? [y/N] " -n 1 -r
+    echo
+    [[ $REPLY =~ ^[Yy]$ ]] && sudo apt-get dist-upgrade
+fi
+# Check for release upgrades
+if sudo do-release-upgrade -c >/dev/null; then
+    echo "New OS release available!"
+    read -p "Upgrade release? [y/N] " -n 1 -r
+    echo
+    [[ $REPLY =~ ^[Yy]$ ]] && sudo do-release-upgrade
+fi
 echo "Updates complete."
