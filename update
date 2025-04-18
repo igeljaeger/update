@@ -1,6 +1,6 @@
 #!/bin/bash
 ###
-#Ubuntu apt updates:
+#Ubuntu apt package updates:
 ###
 quiet-update() {
     # Silent update check
