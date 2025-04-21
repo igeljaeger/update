@@ -6,16 +6,30 @@ quiet-update() {
     # Silent update check
     sudo apt update -y >/dev/null 2>&1
 
-    # Check if updates exist
-    if [ $(apt list --upgradable 2>/dev/null | wc -l) -gt 1 ]; then
+    # Get upgradable packages list
+    upgradable=$(apt list --upgradable 2>/dev/null | grep -v '^Listing...')
+
+    if [ -n "$upgradable" ]; then
         echo "Updates available:"
-        apt list --upgradable 2>/dev/null | grep -v '^Listing...'
-        sudo apt upgrade -y --allow-downgrades 2>&1 | grep -v '^Summary:\|^WARNING\|^$'
+        echo "$upgradable" | sed 's#/.*$##'  # Show package names only
+
+        # Perform upgrades and capture output
+        upgraded_packages=$(sudo apt upgrade -y --allow-downgrades 2>&1 | \
+            grep '^Inst' | sed 's/^Inst //;s/ (.*//')
+
+        echo "\nUpgraded packages:"
+        [ -n "$upgraded_packages" ] && echo "$upgraded_packages" || echo "None"
+
+        # Handle autoremove
+        removed_packages=$(sudo apt autoremove -y 2>&1 | \
+            grep '^Remv' | sed 's/^Remv //;s/ (.*//')
+
+        echo "\nRemoved packages:"
+        [ -n "$removed_packages" ] && echo "$removed_packages" || echo "None"
     else
         echo "System up to date."
     fi
 }
-sudo apt autoremove -y 
 ###
 #Install missing apt packages:
 ###
