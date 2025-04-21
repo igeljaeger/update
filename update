@@ -1,5 +1,14 @@
 #!/bin/bash
 ###
+# Ensure ~/.local/bin is in PATH
+###
+echo -n "Checking PATH for ~/.local/bin... "
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo "Adding to PATH"
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc  # Reload for current shell
+fi
+###
 #Ubuntu apt package updates:
 ###
 echo "Checking for apt updates..."
