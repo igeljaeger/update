@@ -12,7 +12,7 @@ quiet-update() {
         apt list --upgradable 2>/dev/null | grep -v '^Listing...'
         sudo apt upgrade -y --allow-downgrades 2>&1 | grep -v '^Summary:\|^WARNING\|^$'
     else
-        echo "System up to date"
+        echo "System up to date."
     fi
 }
 sudo apt autoremove -y 
