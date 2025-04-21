@@ -25,7 +25,7 @@ for pkg in steam-devices adb ffmpeg ani-cli yt-dlp syncplay fastfetch mpv openvp
     fi
 done
 ###
-# Check if Discord is installed via apt/dpkg
+# Check if Discord is installed
 ###
 echo "Checking if Discord is installed..."
 # Check if Discord exists in any package manager AND has an executable
