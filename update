@@ -53,11 +53,8 @@ if ! discord_exists; then
     wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
     sudo apt install -y ./discord.deb
     rm discord.deb
-
-    # Install common missing dependencies
-    sudo apt install -y libc++1 libatomic1
 else
-    echo "Discord already exists via apt, snap, or flatpak"
+    echo "Discord is already installed."
 fi
 ###
 #Install latest ani-cli version:
