@@ -154,7 +154,7 @@ for flatpak_name in "${flatpaks[@]}"; do
 
         if [[ -n "$app_id" ]]; then
             echo "Installing '$flatpak_name'..."
-            flatpak install flathub "$app_id" -y >/dev/null 2>&1
+            flatpak install --user flathub "$app_id" -y >/dev/null 2>&1
             echo "Installed: $flatpak_name ($app_id)"
         else
             echo "Error: Could not find '$flatpak_name' on Flathub"
