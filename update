@@ -110,6 +110,14 @@ sudo snap refresh
 ###
 #Install missing flatpak packages:
 ###
+echo "Checking if Flathub repository is missing..."
+if ! flatpak remote-list | grep -q flathub; then
+    echo "Flathub not found - adding repository..."
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+    echo "Flathub repository added successfully."
+else
+    echo "Flathub repository already configured."
+fi
 echo "Checking if some flatpaks are missing..."
 flatpaks=(
     "Brave"
