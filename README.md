@@ -1,2 +1,2 @@
 # update
-my overcomplicated update script for ubuntu systems
+my overcomplicated update/setup script for ubuntu systems
