@@ -28,16 +28,36 @@ done
 # Check if Discord is installed via apt/dpkg
 ###
 echo "Checking if Discord is installed..."
-# Check if Discord exists in any package format
-if ! (dpkg -l | grep -q '^ii.*discord' || \
-      snap list discord 2>/dev/null | grep -q discord || \
-      flatpak list --app --columns=name,application | grep -P "^Discord\s+" | awk '{print $2}'); then
+# Check if Discord exists in any package manager AND has an executable
+discord_exists() {
+    # Check apt/dpkg
+    if dpkg -l | grep -q '^ii.*discord'; then
+        [ -f /usr/bin/discord ] && return 0
+    fi
 
-    wget -qO discord.deb "https://discord.com/api/download?platform=linux&format=deb"
-    sudo apt install -y ./discord.deb >/dev/null
+    # Check snap
+    if snap list discord 2>/dev/null | grep -q discord; then
+        [ -f /snap/bin/discord ] && return 0
+    fi
+
+    # Check flatpak
+    if flatpak list --app | grep -q 'com.discordapp.Discord'; then
+        return 0  # Flatpak handles its own executables
+    fi
+
+    return 1
+}
+
+if ! discord_exists; then
+    echo "Discord not found, installing .deb version..."
+    wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+    sudo apt install -y ./discord.deb
     rm discord.deb
+
+    # Install common missing dependencies
+    sudo apt install -y libc++1 libatomic1
 else
-echo "It is."
+    echo "Discord already exists via apt, snap, or flatpak"
 fi
 ###
 #Install latest ani-cli version:
