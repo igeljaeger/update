@@ -27,7 +27,7 @@ done
 ###
 # Check if Discord is installed via apt/dpkg
 ###
-echo "Checking if Discord is installed"
+echo "Checking if Discord is installed..."
 # Check if Discord exists in any package format
 if ! (dpkg -l | grep -q '^ii.*discord' || \
       snap list discord 2>/dev/null | grep -q discord || \
@@ -36,6 +36,8 @@ if ! (dpkg -l | grep -q '^ii.*discord' || \
     wget -qO discord.deb "https://discord.com/api/download?platform=linux&format=deb"
     sudo apt install -y ./discord.deb >/dev/null
     rm discord.deb
+else
+echo "It is."
 fi
 ###
 #Install latest ani-cli version:
@@ -59,7 +61,7 @@ yt-dlp --update | sed -n '/yt-dlp is up to date./s/(.*//p' | sed 's/\.$//' || tr
 ###
 #Install missing snap packages:
 ###
-echo "Checking if some snaps are missing."
+echo "Checking if some snaps are missing..."
 for snap in scrcpy; do
     snap list "$snap" >/dev/null 2>&1 || sudo snap install "$snap" >/dev/null 2>&1
 done
@@ -71,7 +73,7 @@ sudo snap refresh
 ###
 #Install missing flatpak packages:
 ###
-echo "Checking if some flatpaks are missing."
+echo "Checking if some flatpaks are missing..."
 flatpaks=(
     "Brave"
     "Protontricks"
@@ -97,9 +99,7 @@ flatpaks=(
     "Audacity"
     "Azahar"
     "Grabber"
-    "Calculator"
     "Cheese"
-    "Rhythmbox"
     "Pika Backup"
     "JDownloader"
     "Krita"
