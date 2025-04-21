@@ -25,6 +25,19 @@ for pkg in steam-devices adb ffmpeg ani-cli yt-dlp syncplay fastfetch mpv openvp
     fi
 done
 ###
+# Check if Discord is installed via apt/dpkg
+###
+echo "Checking if Discord is installed"
+# Check if Discord exists in any package format
+if ! (dpkg -l | grep -q '^ii.*discord' || \
+      snap list discord 2>/dev/null | grep -q discord || \
+      flatpak list --app --columns=name,application | grep -P "^Discord\s+" | awk '{print $2}'); then
+
+    wget -qO discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+    sudo apt install -y ./discord.deb >/dev/null
+    rm discord.deb
+fi
+###
 #Install latest ani-cli version:
 ###
 if [ ! -f ~/.local/bin/ani-cli ]; then
