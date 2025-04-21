@@ -46,6 +46,7 @@ yt-dlp --update | sed -n '/yt-dlp is up to date./s/(.*//p' | sed 's/\.$//' || tr
 ###
 #Install missing snap packages:
 ###
+echo "Checking if some snaps are missing."
 for snap in scrcpy; do
     snap list "$snap" >/dev/null 2>&1 || sudo snap install "$snap" >/dev/null 2>&1
 done
@@ -54,6 +55,62 @@ done
 ###
 echo "Updating snaps."
 sudo snap refresh
+###
+#Install missing flatpak packages:
+###
+echo "Checking if some flatpaks are missing."
+flatpaks=(
+    "Brave"
+    "Protontricks"
+    "Flatseal"
+    "Spotify"
+    "SGDBoop"
+    "Bottles"
+    "Steam"
+    "VSCodium"
+    "Quick Web Apps"
+    "Komikku"
+    "AdwSteamGtk"
+    "Hedge Mod Manager"
+    "Ryujinx (Ryubing)"
+    "Kooha"
+    "Upscaler"
+    "Lutris"
+    "Luanti"
+    "Scribus"
+    "Floorp"
+    "Dolphin Emulator"
+    "Audacious"
+    "Audacity"
+    "Azahar"
+    "Grabber"
+    "Calculator"
+    "Cheese"
+    "Rhythmbox"
+    "Pika Backup"
+    "JDownloader"
+    "Krita"
+    "KeePassXC"
+    "LibreOffice"
+    "PPSSPP"
+    "qBittorrent"
+    "Signal Desktop"
+)
+
+for flatpak_name in "${flatpaks[@]}"; do
+    if ! flatpak list --app --columns=name | grep -qxF "$flatpak_name"; then
+        app_id=$(flatpak search "$flatpak_name" --columns=name,application | \
+                 awk -v name="$flatpak_name" '$1 == name {print $2; exit}')
+
+        if [[ -n "$app_id" ]]; then
+            echo "Installing '$flatpak_name'..."
+            flatpak install flathub "$app_id" -y >/dev/null 2>&1
+            echo "Installed: $flatpak_name ($app_id)"
+        else
+            echo "Error: Could not find '$flatpak_name' on Flathub"
+        fi
+    fi
+done
 echo "Updating flatpaks."
 if output=$(flatpak update -y 2>&1); then
     # Filter and process output
