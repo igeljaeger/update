@@ -104,7 +104,7 @@ yt-dlp --update | sed -n '/yt-dlp is up to date./s/(.*//p' | sed 's/\.$//' || tr
 #Install missing snap packages:
 ###
 echo "Checking if some snaps are missing..."
-for snap in scrcpy firefox; do
+for snap in scrcpy; do
     snap list "$snap" >/dev/null 2>&1 || sudo snap install "$snap" >/dev/null 2>&1
 done
 # snaps with "--classic" constraint
@@ -130,6 +130,7 @@ fi
 echo "Checking if some flatpaks are missing..."
 flatpaks=(
     "Brave"
+    "Firefox"
     "Protontricks"
     "Flatseal"
     "Spotify"
