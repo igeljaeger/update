@@ -129,7 +129,6 @@ else
 fi
 echo "Checking if some flatpaks are missing..."
 flatpaks=(
-    "Brave"
     "Firefox"
     "Protontricks"
     "Flatseal"
@@ -140,7 +139,6 @@ flatpaks=(
     "VSCodium"
     "Quick Web Apps"
     "Komikku"
-    "AdwSteamGtk"
     "Hedge Mod Manager"
     "Ryujinx (Ryubing)"
     "Kooha"
@@ -179,21 +177,7 @@ for flatpak_name in "${flatpaks[@]}"; do
     fi
 done
 echo "Updating flatpaks."
-if output=$(flatpak update -y 2>&1); then
-    # Filter and process output
-    filtered=$(grep -v -e '^Info:' -e '^   ' -e '^$' <<< "$output" |
-               sed '/Updating [0-9]\+[/][0-9]\+…/d; /^Updating [0-9]\+[/][0-9]\+…/d')
-
-    if [[ "$filtered" =~ "Nothing to do" ]]; then
-        echo "All flatpaks up to date."
-    else
-        # Extract and format update list
-        updates_list=$(awk '/Looking for updates…/,/Updating [0-9]+\/[0-9]+/' <<< "$filtered" |
-                       sed '/Looking/d; /Updating/d')
-        echo "Updates applied:"
-        echo "$updates_list"
-    fi
-fi
+flatpak update -y
 ###
 #Check for major distro-upgrades:
 ###
