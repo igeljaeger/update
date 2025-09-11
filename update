@@ -145,7 +145,6 @@ fi
 flatpaks=(
 "Firefox"
 "Steam"
-"Proton-GE"
 "Protontricks"
 "Flatseal"
 "Spotify"
