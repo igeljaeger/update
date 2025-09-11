@@ -1,2 +1,2 @@
 # update
-my overcomplicated update and setup script for ubuntu systems and a handy arch update script too.
+My overcomplicated update and setup script for ubuntu and arch systems.
