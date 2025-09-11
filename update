@@ -1,5 +1,6 @@
 #!/bin/bash
 LOG_FILE="/tmp/updates.log"
+exp_dir="$HOME/.local/bin"
 exec > >(tee -a "$LOG_FILE") 2>&1
 ###
 # Ensure ~/.local/bin is in PATH
@@ -8,6 +9,7 @@ if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     echo "Adding to PATH"
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
     source ~/.bashrc  # Reload for current shell
+    cp "$0" "$exp_dir"/
 fi
 ###
 #Ubuntu apt package updates:
