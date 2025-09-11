@@ -146,10 +146,8 @@ if [[ "$OS_TYPE" = "arch" ]]; then
         echo -e "${green}Essentials flatpak, discover, yay already installed. Skipping initial setup.${nc}"
     fi
 
-    echo -e "${green}Updating Arch repositories and keyrings...${nc}"
-    sudo pacman -Syy || { echo -e "${red}Error updating repositories!${nc}"; exit 1; }
     echo -e "${green}Updating pacman packages...${nc}"
-    sudo pacman -Syu --noconfirm || { echo -e "${red}Error updating pacman packages!${nc}"; exit 1; }
+    sudo pacman -Syyu --noconfirm || { echo -e "${red}Error updating pacman packages!${nc}"; exit 1; }
     echo -e "${green}Updating yay packages...${nc}"
     if command -v yay &>/dev/null; then
         yay -Syu --noconfirm || { echo -e "${red}Error updating yay packages!${nc}"; exit 1; }
