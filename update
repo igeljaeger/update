@@ -1,0 +1,217 @@
+#!/bin/bash
+
+LOG_FILE="/tmp/updates.log"
+exp_dir="$HOME/.local/bin"
+green='\033[0;32m'
+yellow='\033[0;33m'
+red='\033[0;31m'
+nc='\033[0m' # No Color
+
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+###
+# Ensure ~/.local/bin is in PATH
+###
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo "Adding .local/bin to PATH and placing the script there for future use."
+    echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc # Reload for current shell
+    cp "$0" "$exp_dir"/
+fi
+
+###
+# Detect Distro
+###
+function is_ubuntu() {
+    grep -qiE "ubuntu" /etc/*release 2>/dev/null
+}
+
+function is_arch() {
+    grep -qiE "arch" /etc/*release 2>/dev/null || grep -qiE "endeavouros" /etc/*release 2>/dev/null
+}
+
+if is_ubuntu; then
+    OS_TYPE="ubuntu"
+elif is_arch; then
+    OS_TYPE="arch"
+else
+    echo -e "${red}Unsupported distribution. Exiting.${nc}"
+    exit 1
+fi
+
+echo -e "${green}Detected OS: $OS_TYPE${nc}"
+
+###
+# Ubuntu-specific section
+###
+if [[ "$OS_TYPE" = "ubuntu" ]]; then
+    echo -e "${green}Checking for apt updates...${nc}"
+    sudo apt update -y
+    sudo apt upgrade -y
+    sudo apt autoremove -y
+
+    echo -e "${green}Checking/installing essential apt packages...${nc}"
+    sudo apt install -y partitionmanager vim steam-devices adb ffmpeg ani-cli yt-dlp syncplay fastfetch mpv openvpn openvpn-dco-dkms snapd flatpak plasma-discover-backend-snap plasma-discover-backend-flatpak steam
+
+    # Discord installation/check (apt/snap/flatpak)
+    echo -e "${green}Checking if Discord is installed...${nc}"
+    discord_exists() {
+        if dpkg -l | grep -q '^ii.*discord'; then [ -f /usr/bin/discord ] && return 0; fi
+        if snap list discord 2>/dev/null | grep -q discord; then [ -f /snap/bin/discord ] && return 0; fi
+        if flatpak list --app | grep -q 'com.discordapp.Discord'; then return 0; fi
+        return 1
+    }
+    if ! discord_exists; then
+        echo -e "${yellow}Discord not found, installing .deb version...${nc}"
+        wget -O discord.deb "https://discord.com/api/download?platform=linux&format=deb"
+        sudo apt install -y ./discord.deb
+        rm discord.deb
+    else
+        echo -e "${green}Discord is already installed.${nc}"
+    fi
+
+    # Snap packages
+    echo -e "${green}Checking/installing snap packages...${nc}"
+    for snap in scrcpy; do
+        snap list "$snap" &>/dev/null || sudo snap install "$snap"
+    done
+    for snap in bash-language-server; do
+        snap list "$snap" &>/dev/null || sudo snap install "$snap" --classic
+    done
+
+    # Snap refresh
+    echo -e "${green}Updating snaps...${nc}"
+    sudo snap refresh
+
+    # Distro and release upgrades
+    pending_pkg=$(sudo apt-get -s dist-upgrade | grep -P '^\d+ (removed|newly installed)')
+    if [[ -n "$pending_pkg" ]]; then
+        echo -e "${yellow}Major package changes required:${nc}"
+        sudo apt-get -s dist-upgrade | grep -P '^\d+ (upgraded|newly installed|removed)'
+        read -p "Continue? [y/N] " -n 1 -r; echo
+        [[ $REPLY =~ ^[Yy]$ ]] && sudo apt-get dist-upgrade
+    fi
+
+    if sudo do-release-upgrade -c &>/dev/null; then
+        echo -e "${yellow}New OS release available!${nc}"
+        read -p "Upgrade release? [y/N] " -n 1 -r; echo
+        [[ $REPLY =~ ^[Yy]$ ]] && sudo do-release-upgrade
+    fi
+fi
+
+###
+# Arch/EndeavourOS-specific section
+###
+if [[ "$OS_TYPE" = "arch" ]]; then
+    # Perform an initial "fresh install" for core tools if needed
+    core_pkgs=("flatpak" "discover" "yay")
+    missing_core_pkgs=()
+    for pkg in "${core_pkgs[@]}"; do
+        if ! pacman -Qi "$pkg" &>/dev/null; then
+            missing_core_pkgs+=("$pkg")
+        fi
+    done
+
+    if (( ${#missing_core_pkgs[@]} > 0 )); then
+        echo -e "${yellow}First time Arch/EndeavourOS core essentials installation needed: ${missing_core_pkgs[*]}${nc}"
+        sudo pacman --noconfirm -Syyu flatpak discover yay
+        yay --noconfirm -Syyu fastfetch ffmpeg mpv scrcpy python-mutagen
+    else
+        echo -e "${green}Essentials flatpak, discover, yay already installed. Skipping initial setup.${nc}"
+    fi
+
+    echo -e "${green}Updating Arch repositories and keyrings...${nc}"
+    sudo pacman -Syy || { echo -e "${red}Error updating repositories!${nc}"; exit 1; }
+    echo -e "${green}Updating pacman packages...${nc}"
+    sudo pacman -Syu --noconfirm || { echo -e "${red}Error updating pacman packages!${nc}"; exit 1; }
+    echo -e "${green}Updating yay packages...${nc}"
+    if command -v yay &>/dev/null; then
+        yay -Syu --noconfirm || { echo -e "${red}Error updating yay packages!${nc}"; exit 1; }
+    else
+        echo -e "${yellow}yay not found. Installing yay...${nc}"
+        sudo pacman -S yay --noconfirm || { echo -e "${red}Couldn't install yay. Exiting.${nc}"; exit 1; }
+    fi
+fi
+
+###
+# Cross-distro: Flatpak & Universal tools
+###
+echo -e "${green}Checking if Flathub repository is configured...${nc}"
+if ! flatpak remote-list | grep -q flathub; then
+    echo -e "${yellow}Flathub not found - adding repository...${nc}"
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+fi
+
+flatpaks=(
+"Firefox"
+"Steam"
+"Proton-GE"
+"Protontricks"
+"Flatseal"
+"Spotify"
+"SGDBoop"
+"Bottles"
+"VSCodium"
+"Hedge Mod Manager"
+"Ryujinx (Ryubing)"
+"Kooha"
+"Upscaler"
+"Lutris"
+"Scribus"
+"Dolphin Emulator"
+"Audacity"
+"Azahar"
+"Grabber"
+"Cheese"
+"Pika Backup"
+"JDownloader"
+"Krita"
+"KeePassXC"
+"LibreOffice"
+"PPSSPP"
+"qBittorrent"
+"Signal Desktop"
+)
+
+echo -e "${green}Ensuring selected Flatpaks are installed...${nc}"
+for flatpak_name in "${flatpaks[@]}"; do
+    if ! flatpak list --app --columns=name | grep -qxF "$flatpak_name"; then
+        app_id=$(flatpak search "$flatpak_name" --columns=name,application | awk -v name="$flatpak_name" '$1 == name {print $2; exit}')
+        if [[ -n "$app_id" ]]; then
+            echo "Installing '$flatpak_name'..."
+            flatpak install --user flathub "$app_id" -y
+            echo "Installed: $flatpak_name ($app_id)"
+        else
+            echo "Error: Could not find '$flatpak_name' on Flathub"
+        fi
+    fi
+done
+# Proton-GE Flatpak special case
+if ! flatpak list --app --columns=application | grep -qxF "com.valvesoftware.Steam.CompatibilityTool.Proton-GE"; then
+    echo "Installing Proton-GE Flatpak…"
+    flatpak install -y flathub com.valvesoftware.Steam.CompatibilityTool.Proton-GE
+else
+    echo "Proton-GE Flatpak is already installed."
+fi
+
+echo -e "${green}Updating Flatpaks...${nc}"
+flatpak update -y
+
+# ani-cli install/update
+if [ ! -f ~/.local/bin/ani-cli ]; then
+    wget -O ~/.local/bin/ani-cli https://github.com/pystardust/ani-cli/releases/latest/download/ani-cli
+    chmod a+rx ~/.local/bin/ani-cli
+fi
+echo -e "${green}Updating ani-cli...${nc}"
+output=$(ani-cli --update)
+[[ "$output" =~ "up to date" ]] && echo "ani-cli is up to date." || echo "$output"
+
+# yt-dlp install/update
+if [ ! -f ~/.local/bin/yt-dlp ]; then
+    wget -O ~/.local/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp
+    chmod a+rx ~/.local/bin/yt-dlp
+fi
+echo -e "${green}Updating yt-dlp...${nc}"
+yt-dlp --update | sed -n '/yt-dlp is up to date./s/(.*//p' | sed 's/\.$//' || true
+
+echo -e "${green}System update complete.${nc}"
