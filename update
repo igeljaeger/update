@@ -103,6 +103,32 @@ fi
 # Arch/EndeavourOS-specific section
 ###
 if [[ "$OS_TYPE" = "arch" ]]; then
+    keyrings=("endeavouros-keyring" "archlinux-keyring")
+    update_needed=0
+
+    # Check if each keyring package is installed and updatable
+    for kr in "${keyrings[@]}"; do
+        if ! pacman -Qi "$kr" &>/dev/null; then
+            echo "Keyring package '$kr' is NOT installed."
+            update_needed=1
+        else
+            # Check if upgrade is available
+            if pacman -Qu | grep -q "^$kr "; then
+                echo "Keyring package '$kr' has an update available."
+                update_needed=1
+            else
+                echo "Keyring package '$kr' is installed and up to date."
+            fi
+        fi
+    done
+    
+    if (( update_needed )); then
+        echo "Updating keyrings..."
+        sudo pacman -Sy endeavouros-keyring archlinux-keyring --noconfirm
+    else
+        echo "Keyrings are installed and current."
+    fi
+
     # Perform an initial "fresh install" for core tools if needed
     core_pkgs=("flatpak" "discover" "yay")
     missing_core_pkgs=()
