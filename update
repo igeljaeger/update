@@ -6,7 +6,7 @@ exec > >(tee -a "$LOG_FILE") 2>&1
 # Ensure ~/.local/bin is in PATH
 ###
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo "Adding to PATH"
+    echo "Adding .local/bin to PATH and placing the script there for future use."
     echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
     source ~/.bashrc  # Reload for current shell
     cp "$0" "$exp_dir"/
