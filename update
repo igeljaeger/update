@@ -1,4 +1,6 @@
 #!/bin/bash
+LOG_FILE="/tmp/updates.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
 ###
 # Ensure ~/.local/bin is in PATH
 ###
@@ -11,44 +13,14 @@ fi
 #Ubuntu apt package updates:
 ###
 echo "Checking for apt updates..."
-    sudo apt update -y >/dev/null 2>&1
-
-    # Get upgradable packages list (excluding the "Listing..." line)
-    upgradable=$(apt list --upgradable 2>/dev/null | grep -v '^Listing...')
-
-    if [ -n "$upgradable" ]; then
-        echo "Updates available:"
-        echo "$upgradable" | sed 's#/.*$##'  # Show package names only
-
-        # Perform upgrades and capture output lines starting with 'Inst' (installed packages)
-        upgraded_packages=$(sudo apt upgrade -y --allow-downgrades 2>&1 | \
-            grep '^Inst' | sed 's/^Inst //;s/ (.*//')
-
-        echo -e "\nUpgraded packages:"
-        if [ -n "$upgraded_packages" ]; then
-            echo "$upgraded_packages"
-        else
-            echo "None"
-        fi
-
-        # Perform autoremove and capture removed packages starting with 'Remv'
-        removed_packages=$(sudo apt autoremove -y 2>&1 | \
-            grep '^Remv' | sed 's/^Remv //;s/ (.*//')
-
-        echo -e "\nRemoved packages:"
-        if [ -n "$removed_packages" ]; then
-            echo "$removed_packages"
-        else
-            echo "None"
-        fi
-    else
-        echo "System up to date. No packages to upgrade."
-    fi
+sudo apt update -y
+sudo apt upgrade -y
+sudo apt autoremove -y 
 ###
 #Install missing apt packages:
 ###
 echo "Checking if some apt packages are missing..."
-sudo apt install -y partitionmanager vim steam-devices adb ffmpeg ani-cli yt-dlp syncplay fastfetch mpv openvpn openvpn-dco-dkms snapd flatpak plasma-discover-backend-snap plasma-discover-backend-flatpak >/dev/null 2>&1
+sudo apt install -y partitionmanager vim steam-devices adb ffmpeg ani-cli yt-dlp syncplay fastfetch mpv openvpn openvpn-dco-dkms snapd flatpak plasma-discover-backend-snap plasma-discover-backend-flatpak steam >/dev/null 2>&1
 ###
 # Check if Discord is installed
 ###
@@ -135,16 +107,13 @@ flatpaks=(
     "Spotify"
     "SGDBoop"
     "Bottles"
-    "Steam"
     "VSCodium"
-    "Quick Web Apps"
     "Komikku"
     "Hedge Mod Manager"
     "Ryujinx (Ryubing)"
     "Kooha"
     "Upscaler"
     "Lutris"
-    "Luanti"
     "Scribus"
     "Dolphin Emulator"
     "Audacious"
