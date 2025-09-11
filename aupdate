@@ -1,69 +1,41 @@
 #!/bin/bash
-#the following two are only necessary on a fresh install:
-#sudo pacman --noconfirm -Syyu flatpak yay
-#yay --noconfirm -Syyu fastfetch ffmpeg mpv ani-cli yt-dlp scrcpy
-#Arch updates:
-yay --noconfirm -Syyu
-echo "Updating yt-dlp."
-/home/igel/.local/bin/yt-dlp --update #> /dev/null
-echo "Checking if Flathub repository is missing..."
-if ! flatpak remote-list | grep -q flathub; then
-    echo "Flathub not found - adding repository..."
-    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-    echo "Flathub repository added successfully."
+LOG_FILE="/tmp/updates.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+# Set colors
+green='\033[0;32m'
+yellow='\033[0;33m'
+red='\033[0;31m'
+nc='\033[0m' # No Color
+
+# Update Arch repositories and keyrings
+echo -e "${green}Updating Arch repositories and keyrings...${nc}"
+sudo pacman -Syy || { echo -e "${red}Error updating repositories!${nc}"; exit 1; }
+
+# Update pacman packages
+echo -e "${green}Updating pacman packages...${nc}"
+sudo pacman -Syu --noconfirm || { echo -e "${red}Error updating pacman packages!${nc}"; exit 1; }
+
+#not working? Try this:
+#sudo pacman -Sy endeavouros-keyring --noconfirm
+#sudo pacman -Sy archlinux-keyring --noconfirm
+
+# Update yay packages (requires yay to be installed)
+echo -e "${green}Updating yay packages...${nc}"
+if command -v yay &> /dev/null; then
+  yay -Syu --noconfirm || { echo -e "${red}Error updating yay packages!${nc}"; exit 1; }
 else
-    echo "Flathub repository already configured."
+  echo -e "${yellow}yay not found. Installing yay...${nc}"
+  sudo pacman install yay --noconfirm || { echo -e "${red}Couldn't install yay. Wtf?${nc}"; exit 1; }
 fi
-echo "Checking if some flatpaks are missing..."
-flatpaks=(
-    "Firefox"
-    "Protontricks"
-    "Flatseal"
-    "Spotify"
-    "SGDBoop"
-    "Bottles"
-    "Steam"
-    "VSCodium"
-    "Quick Web Apps"
-    "Komikku"
-    "Hedge Mod Manager"
-    "Ryujinx (Ryubing)"
-    "Kooha"
-    "Upscaler"
-    "Lutris"
-    "Luanti"
-    "Scribus"
-    "Dolphin Emulator"
-    "Audacious"
-    "Audacity"
-    "Azahar"
-    "Grabber"
-    "Cheese"
-    "Pika Backup"
-    "JDownloader"
-    "Krita"
-    "KeePassXC"
-    "LibreOffice"
-    "PPSSPP"
-    "qBittorrent"
-    "Signal Desktop"
-)
 
-for flatpak_name in "${flatpaks[@]}"; do
-    if ! flatpak list --app --columns=name | grep -qxF "$flatpak_name"; then
-        app_id=$(flatpak search "$flatpak_name" --columns=name,application | \
-                 awk -v name="$flatpak_name" '$1 == name {print $2; exit}')
+# Update Flatpak
+echo -e "${green}Updating Flatpak...${nc}"
+flatpak update --assumeyes || { echo -e "${red}Error updating Flatpak!${nc}"; exit 1; }
 
-        if [[ -n "$app_id" ]]; then
-            echo "Installing '$flatpak_name'..."
-            flatpak install --user flathub "$app_id" -y >/dev/null 2>&1
-            echo "Installed: $flatpak_name ($app_id)"
-        else
-            echo "Error: Could not find '$flatpak_name' on Flathub"
-        fi
-    fi
-done
-#Flatpak updates:
-echo "Updating flatpaks."
-flatpak update -y
-echo "Updates complete."
+# Update yt-dlp
+echo -e "${green}Updating yt-dlp....${nc}"
+yt-dlp --update || { echo -e "${red}Error updating Flatpak!${nc}"; exit 1; }
+
+# Cleanup and final message
+echo -e "${green}System update complete.${nc}"
