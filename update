@@ -116,17 +116,13 @@ if [[ "$OS_TYPE" = "arch" ]]; then
             if pacman -Qu | grep -q "^$kr "; then
                 echo "Keyring package '$kr' has an update available."
                 update_needed=1
-            else
-                echo "Keyring package '$kr' is installed and up to date."
             fi
         fi
     done
-    
+
     if (( update_needed )); then
         echo "Updating keyrings..."
         sudo pacman -Sy endeavouros-keyring archlinux-keyring --noconfirm
-    else
-        echo "Keyrings are installed and current."
     fi
 
     # Perform an initial "fresh install" for core tools if needed
@@ -139,22 +135,15 @@ if [[ "$OS_TYPE" = "arch" ]]; then
     done
 
     if (( ${#missing_core_pkgs[@]} > 0 )); then
-        echo -e "${yellow}First time Arch/EndeavourOS core essentials installation needed: ${missing_core_pkgs[*]}${nc}"
+        echo -e "${yellow}First time Arch core essentials installation needed: ${missing_core_pkgs[*]}${nc}"
         sudo pacman --noconfirm -Syyu flatpak discover yay
         yay --noconfirm -Syyu fastfetch ffmpeg mpv scrcpy python-mutagen
-    else
-        echo -e "${green}Essentials flatpak, discover, yay already installed. Skipping initial setup.${nc}"
     fi
 
     echo -e "${green}Updating pacman packages...${nc}"
     sudo pacman -Syyu --noconfirm || { echo -e "${red}Error updating pacman packages!${nc}"; exit 1; }
     echo -e "${green}Updating yay packages...${nc}"
-    if command -v yay &>/dev/null; then
-        yay -Syu --noconfirm || { echo -e "${red}Error updating yay packages!${nc}"; exit 1; }
-    else
-        echo -e "${yellow}yay not found. Installing yay...${nc}"
-        sudo pacman -S yay --noconfirm || { echo -e "${red}Couldn't install yay. Exiting.${nc}"; exit 1; }
-    fi
+    yay -Syu --noconfirm || { echo -e "${red}Error updating yay packages!${nc}"; exit 1; }
 fi
 
 ###
@@ -209,13 +198,8 @@ for flatpak_name in "${flatpaks[@]}"; do
         fi
     fi
 done
-# Proton-GE Flatpak special case
-if ! flatpak list --app --columns=application | grep -qxF "com.valvesoftware.Steam.CompatibilityTool.Proton-GE"; then
-    echo "Installing Proton-GE Flatpak…"
-    flatpak install -y flathub com.valvesoftware.Steam.CompatibilityTool.Proton-GE
-else
-    echo "Proton-GE Flatpak is already installed."
-fi
+# Proton-GE Flatpak
+flatpak install --user -y flathub com.valvesoftware.Steam.CompatibilityTool.Proton-GE &>/dev/null
 
 echo -e "${green}Updating Flatpaks...${nc}"
 flatpak update -y
