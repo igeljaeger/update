@@ -119,7 +119,7 @@ if [[ "$OS_TYPE" = "arch" ]]; then
 
     if (( ${#missing_core_pkgs[@]} > 0 )); then
         echo -e "${yellow}First time Arch core essentials installation needed: ${missing_core_pkgs[*]}${nc}"
-        sudo pacman --noconfirm -Syyu flatpak discover yay
+        sudo pacman --noconfirm -Syyu flatpak discover yay pacman-contrib
         yay --noconfirm -Syyu fastfetch ffmpeg mpv scrcpy python-mutagen
     fi
 
@@ -127,10 +127,13 @@ if [[ "$OS_TYPE" = "arch" ]]; then
     sudo pacman -Syyu --noconfirm || { echo -e "${red}Error updating pacman packages!${nc}"; exit 1; }
     echo -e "${green}Updating yay packages...${nc}"
     yay -Syu --noconfirm || { echo -e "${red}Error updating yay packages!${nc}"; exit 1; }
+    echo -e "${green}Cleaning up pacman cache...${nc}"
+    paccache -ruk0 || { echo -e "${red}Error cleaning up pacman cache!${nc}"; exit 1; }
+    paccache -rk3 || { echo -e "${red}Error cleaning up pacman cache!${nc}"; exit 1; }
 fi
 
 ###
-# Cross-distro: Flatpak & Universal tools
+# Cross-distro: Flatpak
 ###
 echo -e "${green}Checking if Flathub repository is configured...${nc}"
 if ! flatpak remote-list | grep -q flathub; then
