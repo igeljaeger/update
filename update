@@ -109,7 +109,7 @@ if [[ "$OS_TYPE" = "arch" ]]; then
     fi
 
     # Perform an initial "fresh install" for core tools if needed
-    core_pkgs=("flatpak" "discover" "yay")
+    core_pkgs=("flatpak" "discover" "yay" "cronie")
     missing_core_pkgs=()
     for pkg in "${core_pkgs[@]}"; do
         if ! pacman -Qi "$pkg" &>/dev/null; then
